@@ -11,53 +11,61 @@ import {
   Layout,
 } from "./CharacterWidget.styled";
 import { NavigationButtons } from "../NavigationButtons/NavigationButtons";
+import { useQuery } from "@tanstack/react-query";
+import { API_URL } from "../../config";
+import { Character } from "../../types/RickAndMorty.types";
 
 const CharacterWidgetLayout = () => {
-  const { isLoading } = useContext(AppDataContext);
-
   return (
     <Layout>
       <CharacterWidget />
-      <NavigationButtons disabled={isLoading} />
+      <NavigationButtons />
     </Layout>
   );
 };
 
 const CharacterWidget: React.FC = () => {
-  const { character, characterId, isLoading, error } =
-    useContext(AppDataContext);
+  const { characterId } = useContext(AppDataContext);
 
-  if (isLoading) return <StateContainer>Loading...</StateContainer>;
+  const { isPending, error, data } = useQuery<Character>({
+    queryKey: ["character", { id: characterId }],
+    queryFn: () =>
+      fetch(`${API_URL}/character/${characterId}`).then((res) => res.json()),
+  });
 
-  if (error || !character)
+  if (isPending) return <StateContainer>Loading...</StateContainer>;
+
+  if (error || !data)
     return (
       <StateContainer>An error occured... try again later.</StateContainer>
     );
 
+  console.log(data);
+
   return (
     <CharacterWidgetContainer>
-      <StatusBanner status={character.status}>{character.name}</StatusBanner>
+      <StatusBanner status={data.status}>{data.name}</StatusBanner>
       <ContentContainer>
         <InfoContainer>
           <InfoLabel>
             <span className="label">id</span>
-            <span className="value">#{characterId}</span>
+            <span className="value">#{data.id}</span>
           </InfoLabel>
           <InfoLabel>
             <span className="label">status</span>
-            <span className="value">{character.status}</span>
+            <span className="value">{data.status}</span>
           </InfoLabel>
           <InfoLabel>
             <span className="label">gender</span>
-            <span className="value">{character.gender}</span>
+            <span className="value">{data.gender}</span>
           </InfoLabel>
           <InfoLabel>
             <span className="label">episodes</span>
-            <span className="value">{character.episodeCount}</span>
+            <span className="value">{data.episode?.length}</span>
           </InfoLabel>
         </InfoContainer>
 
-        <CharacterAvatar alt="Character avatar" src={character.imageUrl} />
+        <CharacterAvatar alt="Character avatar" src={data.image} />
       </ContentContainer>
     </CharacterWidgetContainer>
   );
