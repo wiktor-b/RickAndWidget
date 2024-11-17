@@ -2,30 +2,65 @@ import React, { useContext } from "react";
 import { AppDataContext } from "../../contexts/AppData.context";
 import {
   CharacterWidgetContainer,
-  CharacterStatusLabel,
-  CharacterAvatar
+  StatusBanner,
+  ContentContainer,
+  InfoContainer,
+  InfoLabel,
+  CharacterAvatar,
+  StateContainer,
+  Layout,
 } from "./CharacterWidget.styled";
+import { NavigationButtons } from "../NavigationButtons/NavigationButtons";
+
+const CharacterWidgetLayout = () => {
+  const { isLoading } = useContext(AppDataContext);
+
+  return (
+    <Layout>
+      <CharacterWidget />
+      <NavigationButtons disabled={isLoading} />
+    </Layout>
+  );
+};
 
 const CharacterWidget: React.FC = () => {
-  const { character } = useContext(AppDataContext);
+  const { character, characterId, isLoading, error } =
+    useContext(AppDataContext);
 
-  if (!character) return null;
+  if (isLoading) return <StateContainer>Loading...</StateContainer>;
+
+  if (error || !character)
+    return (
+      <StateContainer>An error occured... try again later.</StateContainer>
+    );
+
   return (
     <CharacterWidgetContainer>
-      <div>
-        <p>Name: {character.name}</p>
+      <StatusBanner status={character.status}>{character.name}</StatusBanner>
+      <ContentContainer>
+        <InfoContainer>
+          <InfoLabel>
+            <span className="label">id</span>
+            <span className="value">#{characterId}</span>
+          </InfoLabel>
+          <InfoLabel>
+            <span className="label">status</span>
+            <span className="value">{character.status}</span>
+          </InfoLabel>
+          <InfoLabel>
+            <span className="label">gender</span>
+            <span className="value">{character.gender}</span>
+          </InfoLabel>
+          <InfoLabel>
+            <span className="label">episodes</span>
+            <span className="value">{character.episodeCount}</span>
+          </InfoLabel>
+        </InfoContainer>
 
-        <p>
-          Status:{" "}
-          <CharacterStatusLabel isAlive={character.status === "Alive"}>
-            {character.status}
-          </CharacterStatusLabel>
-        </p>
-      </div>
-
-      <CharacterAvatar src={character.imageUrl} alt="Character avatar" />
+        <CharacterAvatar alt="Character avatar" src={character.imageUrl} />
+      </ContentContainer>
     </CharacterWidgetContainer>
   );
 };
 
-export default CharacterWidget;
+export default CharacterWidgetLayout;
